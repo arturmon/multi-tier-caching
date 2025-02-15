@@ -11,7 +11,7 @@ Multi-Tier Cache Library is a modular caching system that provides a multi-layer
 ## Installation
 
 ```sh
-go get github.com/arturmon/multi-tier-cache
+go get github.com/arturmon/multi-tier-caching
 ```
 
 ## Usage
