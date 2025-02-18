@@ -1,10 +1,10 @@
-package cachelib
+package multi_tier_caching
 
 import (
 	"context"
 	"testing"
 
-	"github.com/arturmon/multi-tier-caching/cachelib/mocks"
+	"github.com/arturmon/multi-tier-caching/mocks"
 	databaseMock "github.com/arturmon/multi-tier-caching/storage/mocks"
 	"github.com/stretchr/testify/assert"
 )
