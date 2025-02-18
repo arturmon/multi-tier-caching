@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/arturmon/multi-tier-caching/pkg/storage"
+	"github.com/arturmon/multi-tier-caching/storage"
 )
 
 type DatabaseCache struct {

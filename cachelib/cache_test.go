@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/arturmon/multi-tier-caching/pkg/cachelib/mocks"
-	databaseMock "github.com/arturmon/multi-tier-caching/pkg/storage/mocks"
+	"github.com/arturmon/multi-tier-caching/cachelib/mocks"
+	databaseMock "github.com/arturmon/multi-tier-caching/storage/mocks"
 	"github.com/stretchr/testify/assert"
 )
 

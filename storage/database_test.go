@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/arturmon/multi-tier-caching/pkg/storage/mocks"
+	"github.com/arturmon/multi-tier-caching/storage/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
