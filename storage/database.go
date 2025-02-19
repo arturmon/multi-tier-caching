@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -19,6 +20,20 @@ func NewDatabaseStorage(dsn string) (*DatabaseStorage, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Ensure the cache table exists
+	_, err = pool.Exec(ctx, `
+		CREATE TABLE IF NOT EXISTS cache (
+			key VARCHAR(255) PRIMARY KEY,
+			value TEXT,
+			expires_at TIMESTAMPTZ
+		)
+	`)
+	if err != nil {
+		pool.Close()
+		return nil, fmt.Errorf("failed to create cache table: %w", err)
+	}
+
 	return &DatabaseStorage{pool: pool}, nil
 }
 
