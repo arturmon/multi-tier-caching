@@ -27,19 +27,17 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/arturmon/multi-tier-caching/pkg/cachelib"
-	"github.com/arturmon/multi-tier-caching/pkg/config"
-	"github.com/arturmon/multi-tier-caching/pkg/logger"
-	"github.com/arturmon/multi-tier-caching/pkg/storage"
+	"github.com/arturmon/multi-tier-caching"
+	"github.com/arturmon/multi-tier-caching-example/config"
+	"github.com/arturmon/multi-tier-caching-example/logger"
+	"github.com/arturmon/multi-tier-caching/storage"
 )
 
 func main() {
-	// loading configuration
+
 	cfg := config.LoadConfig()
 
-	// initializing
 	logger.InitLogger(cfg.LogLevel)
-
 	logger.Info("Launching the cache system", "memoryCacheSize", cfg.MemoryCacheSize)
 
 	dbStorage, err := storage.NewDatabaseStorage(cfg.DatabaseDSN)
@@ -55,12 +53,12 @@ func main() {
 		return
 	}
 
-	cache := cachelib.NewMultiTierCache(
-		[]cachelib.CacheLayer{
-			cachelib.NewMemoryCache(),
-			cachelib.NewRedisCache(redisStorage),
+	cache := multi_tier_caching.NewMultiTierCache(
+		[]multi_tier_caching.CacheLayer{
+			multi_tier_caching.NewMemoryCache(),
+			multi_tier_caching.NewRedisCache(redisStorage),
 		},
-		cachelib.NewDatabaseCache(dbStorage),
+		multi_tier_caching.NewDatabaseCache(dbStorage),
 	)
 
 	err = cache.Set(context.Background(), "key1", "value1")
@@ -76,7 +74,6 @@ func main() {
 	<-sigCh
 
 	logger.Info("Shutting down...")
-	cache.Stop()
 }
 
 ```
