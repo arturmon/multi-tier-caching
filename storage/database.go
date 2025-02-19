@@ -51,10 +51,17 @@ func NewDatabaseStorage(dsn string) (*DatabaseStorage, error) {
 
 	// Create a trigger to call the function after insert or update
 	_, err = pool.Exec(ctx, `
-		CREATE TRIGGER clean_expired_cache_trigger
-		AFTER INSERT OR UPDATE ON cache
-		FOR EACH ROW
-		EXECUTE FUNCTION clean_expired_cache();
+		DO $$ 
+		BEGIN
+			IF NOT EXISTS (
+				SELECT 1 FROM pg_trigger WHERE tgname = 'clean_expired_cache_trigger'
+			) THEN
+				CREATE TRIGGER clean_expired_cache_trigger
+				AFTER INSERT OR UPDATE ON cache
+				FOR EACH ROW
+				EXECUTE FUNCTION clean_expired_cache();
+			END IF;
+		END $$;
 	`)
 	if err != nil {
 		pool.Close()
