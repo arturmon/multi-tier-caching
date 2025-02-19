@@ -33,23 +33,34 @@ func NewDatabaseStorage(dsn string) (*DatabaseStorage, error) {
 		pool.Close()
 		return nil, fmt.Errorf("failed to create cache table: %w", err)
 	}
-	// Ensure pg_cron extension is installed
-	_, err = pool.Exec(ctx, "CREATE EXTENSION IF NOT EXISTS pg_cron")
-	if err != nil {
-		pool.Close()
-		return nil, fmt.Errorf("failed to create pg_cron extension: %w", err)
-	}
 
-	// Set up a cron job to clean expired cache entries every 5 minutes
+	// Create a function to clean expired cache entries
 	_, err = pool.Exec(ctx, `
-		SELECT cron.schedule('delete_expired_cache', 
-		                     '*/5 * * * *',  -- every 5 minutes
-		                     'DELETE FROM cache WHERE expires_at <= NOW()');
+		CREATE OR REPLACE FUNCTION clean_expired_cache() 
+		RETURNS TRIGGER AS $$
+		BEGIN
+			DELETE FROM cache WHERE expires_at <= NOW();
+			RETURN NEW;
+		END;
+		$$ LANGUAGE plpgsql;
 	`)
 	if err != nil {
 		pool.Close()
-		return nil, fmt.Errorf("failed to schedule cron job: %w", err)
+		return nil, fmt.Errorf("failed to create clean_expired_cache function: %w", err)
 	}
+
+	// Create a trigger to call the function after insert or update
+	_, err = pool.Exec(ctx, `
+		CREATE TRIGGER clean_expired_cache_trigger
+		AFTER INSERT OR UPDATE ON cache
+		FOR EACH ROW
+		EXECUTE FUNCTION clean_expired_cache();
+	`)
+	if err != nil {
+		pool.Close()
+		return nil, fmt.Errorf("failed to create trigger: %w", err)
+	}
+
 	return &DatabaseStorage{pool: pool}, nil
 }
 
