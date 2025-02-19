@@ -33,7 +33,23 @@ func NewDatabaseStorage(dsn string) (*DatabaseStorage, error) {
 		pool.Close()
 		return nil, fmt.Errorf("failed to create cache table: %w", err)
 	}
+	// Ensure pg_cron extension is installed
+	_, err = pool.Exec(ctx, "CREATE EXTENSION IF NOT EXISTS pg_cron")
+	if err != nil {
+		pool.Close()
+		return nil, fmt.Errorf("failed to create pg_cron extension: %w", err)
+	}
 
+	// Set up a cron job to clean expired cache entries every 5 minutes
+	_, err = pool.Exec(ctx, `
+		SELECT cron.schedule('delete_expired_cache', 
+		                     '*/5 * * * *',  -- every 5 minutes
+		                     'DELETE FROM cache WHERE expires_at <= NOW()');
+	`)
+	if err != nil {
+		pool.Close()
+		return nil, fmt.Errorf("failed to schedule cron job: %w", err)
+	}
 	return &DatabaseStorage{pool: pool}, nil
 }
 
