@@ -4,8 +4,8 @@ go 1.23.1
 
 require (
 	github.com/bits-and-blooms/bloom/v3 v3.7.0
+	github.com/bradfitz/gomemcache v0.0.0-20230905024940-24af94b03874
 	github.com/jackc/pgx/v5 v5.7.2
-	github.com/joho/godotenv v1.5.1
 	github.com/redis/go-redis/v9 v9.7.0
 	github.com/stretchr/testify v1.8.1
 )

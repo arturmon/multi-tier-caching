@@ -5,6 +5,8 @@ import (
 	"errors"
 	"sync"
 	"time"
+
+	"github.com/arturmon/multi-tier-caching/storage"
 )
 
 var (
@@ -18,6 +20,14 @@ type MemoryCache struct {
 
 func NewMemoryCache() *MemoryCache {
 	return &MemoryCache{}
+}
+
+// NewCacheLayer returns the appropriate cache layer based on the environment variable
+func NewCacheLayer(useMemcached bool, memcachedAddr string) CacheLayer {
+	if useMemcached == true {
+		return storage.NewMemcachedCache(memcachedAddr)
+	}
+	return NewMemoryCache()
 }
 
 // Get now takes a context and returns a string.

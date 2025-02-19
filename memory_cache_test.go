@@ -10,7 +10,7 @@ import (
 
 func TestMemoryCache_Get_Set(t *testing.T) {
 	ctx := context.Background()
-	cache := NewMemoryCache()
+	cache := NewCacheLayer(false, "")
 
 	// Test cache miss
 	value, err := cache.Get(ctx, "missing_key")
@@ -28,7 +28,7 @@ func TestMemoryCache_Get_Set(t *testing.T) {
 
 func TestMemoryCache_Expiration(t *testing.T) {
 	ctx := context.Background()
-	cache := NewMemoryCache()
+	cache := NewCacheLayer(false, "")
 
 	cache.Set(ctx, "temp_key", "temp_value", 5*time.Second)
 
@@ -47,7 +47,7 @@ func TestMemoryCache_Expiration(t *testing.T) {
 
 func TestMemoryCache_Delete(t *testing.T) {
 	ctx := context.Background()
-	cache := NewMemoryCache()
+	cache := NewCacheLayer(false, "")
 
 	cache.Set(ctx, "key1", "value1", 5*time.Second)
 
