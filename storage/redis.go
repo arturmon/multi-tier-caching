@@ -41,3 +41,7 @@ func (r *RedisStorage) Set(ctx context.Context, key string, value interface{}, t
 func (r *RedisStorage) Delete(ctx context.Context, key string) {
 	r.client.Del(ctx, key)
 }
+
+func (r *RedisStorage) CheckHealth(ctx context.Context) error {
+	return r.client.Ping(ctx).Err()
+}

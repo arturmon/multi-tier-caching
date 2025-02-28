@@ -3,6 +3,7 @@ package multi_tier_caching
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -132,4 +133,22 @@ func containsLayer(layers []CacheLayer, target CacheLayer) bool {
 		}
 	}
 	return false
+}
+
+func (c *MultiTierCache) HealthCheck(ctx context.Context) error {
+	// Checking all cache layers
+	for _, layer := range c.layers {
+		if err := layer.CheckHealth(ctx); err != nil {
+			return fmt.Errorf("cache layer error: %w", err)
+		}
+	}
+
+	// Database check
+	if db, ok := c.db.(HealthChecker); ok {
+		if err := db.CheckHealth(ctx); err != nil {
+			return fmt.Errorf("database error: %w", err)
+		}
+	}
+
+	return nil
 }

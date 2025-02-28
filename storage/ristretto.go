@@ -51,3 +51,11 @@ func (r *RistrettoCache) Set(ctx context.Context, key string, value string, ttl 
 func (r *RistrettoCache) Delete(ctx context.Context, key string) {
 	r.client.Del(key)
 }
+
+func (r *RistrettoCache) CheckHealth(ctx context.Context) error {
+	// Ristretto has no connection state, we only check for initialization
+	if r.client == nil {
+		return errors.New("ristretto cache is not initialized")
+	}
+	return nil
+}

@@ -102,3 +102,12 @@ func (d *DatabaseStorage) DeleteCache(ctx context.Context, key string) error {
 func (d *DatabaseStorage) Close() {
 	d.pool.Close()
 }
+
+func (d *DatabaseStorage) CheckHealth(ctx context.Context) error {
+	conn, err := d.pool.Acquire(ctx)
+	if err != nil {
+		return fmt.Errorf("database connection error: %w", err)
+	}
+	defer conn.Release()
+	return conn.Ping(ctx)
+}

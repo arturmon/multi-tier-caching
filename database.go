@@ -41,3 +41,7 @@ func (d *DatabaseCache) Delete(ctx context.Context, key string) {
 		return
 	}
 }
+
+func (d *DatabaseCache) CheckHealth(ctx context.Context) error {
+	return d.storage.CheckHealth(ctx)
+}

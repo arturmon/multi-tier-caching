@@ -48,3 +48,7 @@ func (m *MemoryCache) Set(ctx context.Context, key string, value string, ttl tim
 func (m *MemoryCache) Delete(ctx context.Context, key string) {
 	m.storage.Delete(ctx, key)
 }
+
+func (r *MemoryCache) CheckHealth(ctx context.Context) error {
+	return r.storage.CheckHealth(ctx)
+}
