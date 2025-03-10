@@ -21,3 +21,7 @@ func (m *MockDatabaseStorage) Set(ctx context.Context, key, value string, ttl ti
 	args := m.Called(ctx, key, value)
 	return args.Error(0)
 }
+func (m *MockDatabaseStorage) CheckHealth(ctx context.Context) error {
+	args := m.Called(ctx)
+	return args.Error(0)
+}

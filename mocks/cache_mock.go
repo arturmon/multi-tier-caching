@@ -24,3 +24,8 @@ func (m *MockCacheLayer) Set(ctx context.Context, key string, value string, ttl 
 func (m *MockCacheLayer) Delete(ctx context.Context, key string) {
 	m.Called(ctx, key)
 }
+
+func (m *MockCacheLayer) CheckHealth(ctx context.Context) error {
+	args := m.Called(ctx)
+	return args.Error(0)
+}

@@ -2,94 +2,69 @@ package multi_tier_caching
 
 import (
 	"sync"
-	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
+	dto "github.com/prometheus/client_model/go"
 )
 
 type CacheAnalytics struct {
-	hits, misses  int
-	frequencies   map[string]int // Request frequency for each keyword
-	recentFreq    sync.Map       // Request frequency in the last minute
-	mu            sync.Mutex
-	lastResetTime time.Time
+	cacheHits      *prometheus.CounterVec
+	cacheMisses    prometheus.Counter
+	keyFrequency   *prometheus.GaugeVec
+	migrationTime  prometheus.Histogram
+	migrationCount *prometheus.CounterVec
+	mu             sync.RWMutex
+	keys           map[string]struct{}
 }
 
-func NewCacheAnalytics() *CacheAnalytics {
-	return &CacheAnalytics{
-		frequencies:   make(map[string]int),
-		lastResetTime: time.Now(),
-	}
+// LogHit records a cache hit for a specific layer and key, updating the corresponding metrics.
+func (a *CacheAnalytics) LogHit(layerName, key string) {
+	a.cacheHits.WithLabelValues(layerName).Inc()
+	a.keyFrequency.WithLabelValues(key).Inc()
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.keys[key] = struct{}{}
 }
 
-func (ca *CacheAnalytics) LogHit(key string) {
-	ca.mu.Lock()
-	defer ca.mu.Unlock()
-	ca.hits++
-	ca.frequencies[key]++
-	valRecent, _ := ca.recentFreq.LoadOrStore(key, 0)
-	ca.recentFreq.Store(key, valRecent.(int)+1)
+// LogMiss increments the cache miss counter.
+func (a *CacheAnalytics) LogMiss() {
+	a.cacheMisses.Inc()
 }
 
-func (ca *CacheAnalytics) LogMiss() {
-	ca.mu.Lock()
-	defer ca.mu.Unlock()
-	ca.misses++
-}
-
-func (ca *CacheAnalytics) GetStats() (int, int) {
-	ca.mu.Lock()
-	defer ca.mu.Unlock()
-	return ca.hits, ca.misses
-}
-
-func (ca *CacheAnalytics) GetFrequency(key string) int {
-	ca.mu.Lock()
-	defer ca.mu.Unlock()
-	return ca.frequencies[key]
-}
-
-// GetTotalFrequency Returns the total number of times a key has been accessed.
-func (ca *CacheAnalytics) GetTotalFrequency(key string) int {
-	ca.mu.Lock()
-	defer ca.mu.Unlock()
-	return ca.frequencies[key]
-}
-
-// GetFrequencyPerMinute Returns the request rate per minute and resets the counters
-func (ca *CacheAnalytics) GetFrequencyPerMinute() map[string]int {
-	ca.mu.Lock()
-	defer ca.mu.Unlock()
-
-	now := time.Now()
-	if now.Sub(ca.lastResetTime).Minutes() < 1 {
-		return nil // Not a minute has passed yet
+// GetFrequency retrieves the request frequency of a specific cache key.
+func (a *CacheAnalytics) GetFrequency(key string) int {
+	gauge, err := a.keyFrequency.GetMetricWithLabelValues(key)
+	if err != nil {
+		return 0
 	}
 
-	freqCopy := make(map[string]int)
-	// Iterating over the sync.Map using Range
-	ca.recentFreq.Range(func(k, v interface{}) bool {
-		if key, ok := k.(string); ok {
-			if count, ok := v.(int); ok {
-				freqCopy[key] = count
+	var metric dto.Metric
+	if err = gauge.Write(&metric); err != nil {
+		return 0
+	}
+
+	return int(metric.Gauge.GetValue())
+}
+
+// GetFrequencyPerMinute returns a map containing the request frequency of all tracked keys.
+func (a *CacheAnalytics) GetFrequencyPerMinute() map[string]int {
+	result := make(map[string]int)
+
+	// Create a copy of the keys for secure iteration
+	a.mu.RLock()
+	keysCopy := make([]string, 0, len(a.keys))
+	for key := range a.keys {
+		keysCopy = append(keysCopy, key)
+	}
+	a.mu.RUnlock()
+
+	for _, key := range keysCopy {
+		if gauge, err := a.keyFrequency.GetMetricWithLabelValues(key); err == nil {
+			var metric dto.Metric
+			if err = gauge.Write(&metric); err == nil {
+				result[key] = int(*metric.Gauge.Value)
 			}
 		}
-		return true // continue iteration
-	})
-
-	// Resetting temporary data
-	ca.recentFreq = sync.Map{}
-	ca.lastResetTime = now
-
-	return freqCopy
-}
-
-// ResetFrequencies We reset the counters every minute
-func (ca *CacheAnalytics) ResetFrequencies() {
-	ca.mu.Lock()
-	defer ca.mu.Unlock()
-
-	now := time.Now()
-	if now.Sub(ca.lastResetTime).Minutes() >= 1 {
-		ca.frequencies = make(map[string]int) // Clearing the counters
-		ca.lastResetTime = now
 	}
+	return result
 }

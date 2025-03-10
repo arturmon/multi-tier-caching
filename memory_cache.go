@@ -31,16 +31,6 @@ func (m *MemoryCache) Set(ctx context.Context, key string, value string, ttl tim
 	if err != nil {
 		return err
 	}
-	// Automatic deletion by TTL
-	go func() {
-		select {
-		case <-ctx.Done():
-			// If the context is cancelled, stop the timer
-			return
-		case <-time.After(ttl):
-			m.Delete(ctx, key)
-		}
-	}()
 	return nil
 }
 
@@ -49,6 +39,10 @@ func (m *MemoryCache) Delete(ctx context.Context, key string) {
 	m.storage.Delete(ctx, key)
 }
 
-func (r *MemoryCache) CheckHealth(ctx context.Context) error {
-	return r.storage.CheckHealth(ctx)
+func (m *MemoryCache) CheckHealth(ctx context.Context) error {
+	return m.storage.CheckHealth(ctx)
+}
+
+func (m *MemoryCache) String() string {
+	return "Ristretto"
 }

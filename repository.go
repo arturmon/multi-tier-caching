@@ -10,6 +10,7 @@ type CacheLayer interface {
 	Get(ctx context.Context, key string) (string, error)
 	Set(ctx context.Context, key string, value string, ttl time.Duration) error
 	Delete(ctx context.Context, key string)
+	String() string
 	HealthChecker
 }
 
@@ -21,4 +22,8 @@ type Database interface {
 
 type HealthChecker interface {
 	CheckHealth(ctx context.Context) error
+}
+
+type Debuggable interface {
+	GetDebugInfo() map[string]interface{}
 }

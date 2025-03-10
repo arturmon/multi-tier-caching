@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -9,14 +10,15 @@ import (
 )
 
 type RedisStorage struct {
-	client *redis.Client
+	client  *redis.Client
+	metrics *RedisMetrics
 }
 
-func NewRedisStorage(addr, password string) (*RedisStorage, error) {
+func NewRedisStorage(addr, password string, db int) (*RedisStorage, error) {
 	client := redis.NewClient(&redis.Options{
 		Addr:     addr,
 		Password: password,
-		DB:       0,
+		DB:       db,
 	})
 
 	// check connect to Redis
@@ -27,15 +29,26 @@ func NewRedisStorage(addr, password string) (*RedisStorage, error) {
 		return nil, fmt.Errorf("failed to connect to Redis: %w", err)
 	}
 
-	return &RedisStorage{client: client}, nil
+	warmStorage := &RedisStorage{client: client}
+	warmStorage.initRedisMetrics(client)
+	return warmStorage, nil
 }
 
 func (r *RedisStorage) Get(ctx context.Context, key string) (string, error) {
-	return r.client.Get(ctx, key).Result()
+	value, err := r.client.Get(ctx, key).Result()
+	if errors.Is(err, redis.Nil) {
+		r.metrics.Misses.Inc() // metric
+		return "", ErrCacheMiss
+	} else if err != nil {
+		return "", err
+	}
+	r.metrics.Hits.WithLabelValues("redis").Inc() // metric
+	return value, nil
 }
 
 func (r *RedisStorage) Set(ctx context.Context, key string, value interface{}, ttl time.Duration) {
 	r.client.Set(ctx, key, value, ttl)
+	r.metrics.Writes.Inc() // metric
 }
 
 func (r *RedisStorage) Delete(ctx context.Context, key string) {

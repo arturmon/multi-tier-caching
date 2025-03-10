@@ -18,7 +18,7 @@ func TestWriteQueue(t *testing.T) {
 		mu.Unlock()
 	}
 
-	wq := NewWriteQueue(processor)
+	wq := NewWriteQueue(processor, false)
 
 	task1 := WriteTask{Key: "key1", Value: "value1"}
 	task2 := WriteTask{Key: "key2", Value: "value2"}

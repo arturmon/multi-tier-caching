@@ -7,7 +7,7 @@ import (
 )
 
 func TestBloomFilter(t *testing.T) {
-	filter := NewBloomFilter(1000, 5)
+	filter := NewBloomFilter(1000, 5, false, nil)
 
 	// Check if the key is not in the filter
 	key := "test_key"

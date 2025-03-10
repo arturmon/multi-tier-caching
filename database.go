@@ -2,6 +2,7 @@ package multi_tier_caching
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/arturmon/multi-tier-caching/storage"
@@ -38,10 +39,18 @@ func (d *DatabaseCache) Set(ctx context.Context, key string, value string, ttl t
 func (d *DatabaseCache) Delete(ctx context.Context, key string) {
 	err := d.storage.DeleteCache(ctx, key)
 	if err != nil {
-		return
+		log.Printf("Failed to delete key=%s: %v", key, err)
 	}
+}
+
+func (d *DatabaseCache) Close() {
+	d.storage.Close()
 }
 
 func (d *DatabaseCache) CheckHealth(ctx context.Context) error {
 	return d.storage.CheckHealth(ctx)
+}
+
+func (d *DatabaseCache) String() string {
+	return "Database"
 }

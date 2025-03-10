@@ -38,3 +38,7 @@ func (r *RedisCache) Delete(ctx context.Context, key string) {
 func (r *RedisCache) CheckHealth(ctx context.Context) error {
 	return r.storage.CheckHealth(ctx)
 }
+
+func (r *RedisCache) String() string {
+	return "Redis"
+}
