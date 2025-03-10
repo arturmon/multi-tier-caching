@@ -1,0 +1,15 @@
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: "/"
+    schedule:
+      interval: daily
+    reviewers:
+      - "arturmon"
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 99
+    reviewers:
+      - "arturmon"
