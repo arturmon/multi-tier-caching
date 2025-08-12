@@ -8,7 +8,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/prometheus/client_golang v1.21.0
 	github.com/prometheus/client_model v0.6.1
-	github.com/redis/go-redis/v9 v9.11.0
+	github.com/redis/go-redis/v9 v9.12.1
 	github.com/stretchr/testify v1.10.0
 )
 
